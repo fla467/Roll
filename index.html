@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Snimaoyins Roll Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --common: #9aa1a6;
+      --uncommon: #54b06a;
+      --rare: #4aa1ff;
+      --epic: #9b59b6;
+      --legendary: #f39c12;
+      --mythic: #e74c3c;
+      --bg: #0f1320;
+      --card: #161a2e;
+      --text: #e6e8ee;
+      --muted: #a8adbd;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(1200px 600px at 50% 30%, #1a1f3c, var(--bg));
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    }
+
+    .game {
+      width: 92vw;
+      max-width: 720px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35), inset 0 0 40px rgba(255,255,255,0.02);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .title {
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0 10px;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--text);
+      background: #242a48;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.06s ease, box-shadow 0.15s ease, background 0.2s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(1px) scale(0.99); }
+
+    .roll {
+      font-size: clamp(42px, 8vw, 72px);
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin: 10px 0 2px;
+    }
+
+    .rarity {
+      font-weight: 700;
+      font-size: 1.15rem;
+      margin-bottom: 14px;
+    }
+
+    .explain {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .result-card {
+      margin-top: 12px;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 14px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 6px 14px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.14);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* Color “directs” by rarity */
+    .c-common { color: var(--common); }
+    .c-uncommon { color: var(--uncommon); }
+    .c-rare { color: var(--rare); }
+    .c-epic { color: var(--epic); }
+    .c-legendary { color: var(--legendary); }
+    .c-mythic { color: var(--mythic); }
+
+    .legend {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .legend .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.92rem;
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.03);
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <div class="header">
+      <div>
+        <div class="title">Snimaoyins Roll</div>
+        <div class="subtitle">Higher numbers are rarer. Only 67, 41, 21, and 69 are Mythic.</div>
+      </div>
+      <div class="controls">
+        <button id="rollBtn" onclick="snimaoyins()">Roll</button>
+        <button onclick="resetGame()">Reset</button>
+      </div>
+    </div>
+
+    <section class="result-card">
+      <div>
+        <div id="roll" class="roll c-common">—</div>
+        <div id="rarity" class="rarity c-common">Awaiting your first roll</div>
+        <div id="desc" class="explain">Press “Roll” to test your luck.</div>
+      </div>
+      <div class="badge">
+        <span id="badgeText">No result</span>
+        <span id="badgeDot" class="dot" style="background: var(--common)"></span>
+      </div>
+    </section>
+
+    <section class="legend">
+      <div class="row"><span class="dot" style="background: var(--common)"></span> Common</div>
+      <div class="row"><span class="dot" style="background: var(--uncommon)"></span> Uncommon</div>
+      <div class="row"><span class="dot" style="background: var(--rare)"></span> Rare</div>
+      <div class="row"><span class="dot" style="background: var(--epic)"></span> Epic</div>
+      <div class="row"><span class="dot" style="background: var(--legendary)"></span> Legendary</div>
+      <div class="row"><span class="dot" style="background: var(--mythic)"></span> Mythic (only 21, 41, 67, 69)</div>
+    </section>
+  </main>
+
+  <script>
+    // Mythic numbers are ONLY these:
+    const MYTHICS = new Set([21, 41, 67, 69]);
+
+    // “Direct colors” by rarity and helper to set UI
+    const rarityColors = {
+      Common: "var(--common)",
+      Uncommon: "var(--uncommon)",
+      Rare: "var(--rare)",
+      Epic: "var(--epic)",
+      Legendary: "var(--legendary)",
+      Mythic: "var(--mythic)"
+    };
+
+    function setUI(num, rarity, note) {
+      const rollEl = document.getElementById("roll");
+      const rarityEl = document.getElementById("rarity");
+      const descEl = document.getElementById("desc");
+      const badgeText = document.getElementById("badgeText");
+      const badgeDot = document.getElementById("badgeDot");
+
+      rollEl.textContent = num;
+      rarityEl.textContent = rarity;
+      descEl.textContent = note;
+
+      // Remove previous color classes
+      rollEl.className = "roll";
+      rarityEl.className = "rarity";
+
+      // Add the new color class
+      rollEl.classList.add("c-" + rarity.toLowerCase());
+      rarityEl.classList.add("c-" + rarity.toLowerCase());
+
+      // Badge color
+      badgeText.textContent = rarity;
+      badgeDot.style.background = rarityColors[rarity];
+    }
+
+    // The main roll function named exactly “snimaoyins”
+    function snimaoyins() {
+      const num = Math.floor(Math.random() * 100) + 1; // 1–100
+      const rarity = getRarity(num);
+      const note = describe(num, rarity);
+      setUI(num, rarity, note);
+    }
+
+    // Reset UI
+    function resetGame() {
+      setUI("—", "Common", "Press “Roll” to test your luck.");
+      document.getElementById("rarity").textContent = "Awaiting your first roll";
+      document.getElementById("badgeText").textContent = "No result";
+    }
+
+    // Rarity logic:
+    // - Higher numbers are rarer by range, BUT Mythic overrides and is only for 21, 41, 67, 69.
+    function getRarity(n) {
+      if (MYTHICS.has(n)) return "Mythic";
+
+      // Base rarity by higher-number-is-rarer “direct”
+      // You can tweak these brackets; they create a smooth rarity climb.
+      if (n <= 60) return "Common";
+      if (n <= 80) return "Uncommon";
+      if (n <= 90) return "Rare";
+      if (n <= 96) return "Epic";
+      return "Legendary";
+    }
+
+    // Flavor text per result
+    function describe(n, rarity) {
+      if (rarity === "Mythic") {
+        return `Mythic hit! Only 21, 41, 67, and 69 qualify. Treasure this roll.`;
+      }
+      const lines = {
+        Common: "A steady pull. Keep climbing.",
+        Uncommon: "You’re warming up. Odds are shifting.",
+        Rare: "Nice snag. Rarity is showing.",
+        Epic: "That’s a standout roll. Feel the rush.",
+        Legendary: "Legendary glow. You’re flirting with the top."
+      };
+      return lines[rarity] || "Interesting outcome.";
+    }
+
+    // Optional: press Enter to roll
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") snimaoyins();
+    });
+  </script>
+</body>
+</html>
